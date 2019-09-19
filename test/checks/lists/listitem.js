@@ -1,41 +1,78 @@
-describe('listitem', function () {
+describe('listitem', function() {
 	'use strict';
 
 	var fixture = document.getElementById('fixture');
+	var checkSetup = axe.testUtils.checkSetup;
+	var shadowSupport = axe.testUtils.shadowSupport;
 
-	afterEach(function () {
+	afterEach(function() {
 		fixture.innerHTML = '';
 	});
 
-	it('should pass if the listitem has a parent <ol>', function () {
-		fixture.innerHTML = '<ol><li id="target">My list item</li></ol>';
-		var node = fixture.querySelector('#target');
-
-		assert.isTrue(checks.listitem.evaluate(node));
-
+	it('should pass if the listitem has a parent <ol>', function() {
+		var checkArgs = checkSetup('<ol><li id="target">My list item</li></ol>');
+		assert.isTrue(checks.listitem.evaluate.apply(null, checkArgs));
 	});
 
-	it('should pass if the listitem has a parent <ul>', function () {
-		fixture.innerHTML = '<ul><li id="target">My list item</li></ul>';
-		var node = fixture.querySelector('#target');
-
-		assert.isTrue(checks.listitem.evaluate(node));
-
+	it('should pass if the listitem has a parent <ul>', function() {
+		var checkArgs = checkSetup('<ul><li id="target">My list item</li></ul>');
+		assert.isTrue(checks.listitem.evaluate.apply(null, checkArgs));
 	});
 
-	it('should pass if the listitem has a parent role=list', function () {
-		fixture.innerHTML = '<div role="list"><li id="target">My list item</li></div>';
-		var node = fixture.querySelector('#target');
-
-		assert.isTrue(checks.listitem.evaluate(node));
-
+	it('should pass if the listitem has a parent role=list', function() {
+		var checkArgs = checkSetup(
+			'<div role="list"><li id="target">My list item</li></div>'
+		);
+		assert.isTrue(checks.listitem.evaluate.apply(null, checkArgs));
 	});
 
-	it('should fail if the listitem has an incorrect parent', function () {
-		fixture.innerHTML = '<div><li id="target">My list item</li></div>';
-		var node = fixture.querySelector('#target');
-
-		assert.isFalse(checks.listitem.evaluate(node));
-
+	it('should fail if the listitem has an incorrect parent', function() {
+		var checkArgs = checkSetup('<div><li id="target">My list item</li></div>');
+		assert.isFalse(checks.listitem.evaluate.apply(null, checkArgs));
 	});
+
+	it('should fail if the listitem has a parent <ol> with changed role', function() {
+		var checkArgs = checkSetup(
+			'<ol role="menubar"><li id="target">My list item</li></ol>'
+		);
+		assert.isFalse(checks.listitem.evaluate.apply(null, checkArgs));
+	});
+
+	it('should pass if the listitem has a parent <ol> with an invalid role', function() {
+		var checkArgs = checkSetup(
+			'<ol role="invalid-role"><li id="target">My list item</li></ol>'
+		);
+		assert.isTrue(checks.listitem.evaluate.apply(null, checkArgs));
+	});
+
+	it('should pass if the listitem has a parent <ol> with an abstract role', function() {
+		var checkArgs = checkSetup(
+			'<ol role="section"><li id="target">My list item</li></ol>'
+		);
+		assert.isTrue(checks.listitem.evaluate.apply(null, checkArgs));
+	});
+
+	(shadowSupport.v1 ? it : xit)(
+		'should return true in a shadow DOM pass',
+		function() {
+			var node = document.createElement('div');
+			node.innerHTML = '<li>My list item </li>';
+			var shadow = node.attachShadow({ mode: 'open' });
+			shadow.innerHTML = '<ul><slot></slot></ul>';
+			var checkArgs = checkSetup(node, 'li');
+			assert.isTrue(checks.listitem.evaluate.apply(null, checkArgs));
+		}
+	);
+
+	(shadowSupport.v1 ? it : xit)(
+		'should return false in a shadow DOM fail',
+		function() {
+			var node = document.createElement('div');
+			node.innerHTML = '<li>My list item </li>';
+			var shadow = node.attachShadow({ mode: 'open' });
+			shadow.innerHTML = '<div><slot></slot></div>';
+			var checkArgs = checkSetup(node, 'li');
+			assert.isFalse(checks.listitem.evaluate.apply(null, checkArgs));
+		}
+	);
 });

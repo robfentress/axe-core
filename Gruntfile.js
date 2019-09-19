@@ -1,7 +1,9 @@
-//jshint maxcomplexity: 12, maxstatements: false, camelcase: false
+/*eslint
+camelcase: ["error", {"properties": "never"}]
+*/
 var testConfig = require('./build/test/config');
 
-module.exports = function (grunt) {
+module.exports = function(grunt) {
 	'use strict';
 
 	grunt.loadNpmTasks('grunt-babel');
@@ -9,79 +11,93 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-connect');
 	grunt.loadNpmTasks('grunt-contrib-copy');
-	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-watch');
-	grunt.loadNpmTasks('grunt-retire');
 	grunt.loadNpmTasks('grunt-mocha');
-	grunt.loadTasks('build/tasks');
 	grunt.loadNpmTasks('grunt-parallel');
+	grunt.loadNpmTasks('grunt-run');
+	grunt.loadTasks('build/tasks');
 
 	var langs;
 	if (grunt.option('lang')) {
-		langs = (grunt.option('lang') || '')
-		.split(/[,;]/g).map(function (lang) {
+		langs = (grunt.option('lang') || '').split(/[,;]/g).map(function(lang) {
 			lang = lang.trim();
-			return (lang !== 'en' ? '.' + lang : '');
+			return lang !== 'en' ? '.' + lang : '';
 		});
-
 	} else if (grunt.option('all-lang')) {
 		var localeFiles = require('fs').readdirSync('./locales');
-		langs = localeFiles.map(function (file) {
+		langs = localeFiles.map(function(file) {
 			return '.' + file.replace('.json', '');
 		});
 		langs.unshift(''); // Add default
-
 	} else {
 		langs = [''];
 	}
+
+	var webDriverTestBrowsers = [
+		'firefox',
+		'chrome',
+		'ie',
+		'chrome-mobile',
+		'safari'
+	];
+
+	process.env.NODE_NO_HTTP2 = 1; // to hide node warning - (node:18740) ExperimentalWarning: The http2 module is an experimental API.
 
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
 		parallel: {
 			'browser-test': {
 				options: {
+					stream: true,
 					grunt: true
 				},
-				tasks: [
-					'test-webdriver:firefox',
-					'test-webdriver:chrome',
-					// Edge Webdriver isn't all too stable, manual testing required
-					// 'test-webdriver:edge',
-					// 'test-webdriver:safari',
-					'test-webdriver:ie',
-					'test-webdriver:chrome-mobile'
-				]
+				tasks: webDriverTestBrowsers.map(function(b) {
+					return 'test-webdriver:' + b;
+				})
 			}
 		},
-    retire: {
-			options: {
-				/** list of files to ignore **/
-				ignorefile: '.retireignore.json' //or '.retireignore.json'
-			},
-			js: ['lib/*.js'], /** Which js-files to scan. **/
-			node: ['./'] /** Which node directories to scan (containing package.json). **/
-    },
+		'test-webdriver': (function() {
+			var tests = testConfig(grunt);
+			var options = Object.assign({}, tests.unit.options);
+			options.urls = options.urls.concat(tests.integration.options.urls);
+			var driverTests = {};
+			webDriverTestBrowsers.forEach(function(browser) {
+				driverTests[browser] = {
+					options: Object.assign(
+						{
+							browser: browser
+						},
+						options
+					)
+				};
+			});
+			return driverTests;
+		})(),
 		clean: ['dist', 'tmp', 'axe.js', 'axe.*.js'],
 		babel: {
 			options: {
-				compact: 'false'
+				compact: false
 			},
 			core: {
-				files: [{
-					expand: true,
-					cwd: 'lib/core',
-					src: ['**/*.js'],
-					dest: 'tmp/core'
-				}]
+				files: [
+					{
+						expand: true,
+						cwd: 'lib/core',
+						src: ['**/*.js', '!imports/index.js'],
+						dest: 'tmp/core'
+					}
+				]
 			},
 			misc: {
-				files: [{
-					expand: true,
-					cwd: 'tmp',
-					src: ['*.js'],
-					dest: 'tmp'
-				}]
+				files: [
+					{
+						expand: true,
+						cwd: 'tmp',
+						src: ['*.js'],
+						dest: 'tmp'
+					}
+				]
 			}
 		},
 		'update-help': {
@@ -94,16 +110,16 @@ module.exports = function (grunt) {
 		},
 		concat: {
 			engine: {
+				options: {
+					process: true
+				},
 				coreFiles: [
 					'tmp/core/index.js',
 					'tmp/core/*/index.js',
 					'tmp/core/**/index.js',
 					'tmp/core/**/*.js'
 				],
-				options: {
-					process: true
-				},
-				files: langs.map(function (lang, i) {
+				files: langs.map(function(lang, i) {
 					return {
 						src: [
 							'lib/intro.stub',
@@ -112,7 +128,7 @@ module.exports = function (grunt) {
 							'<%= configure.rules.files[' + i + '].dest.auto %>',
 							'lib/outro.stub'
 						],
-						dest: 'axe' + lang + '.js',
+						dest: 'axe' + lang + '.js'
 					};
 				})
 			},
@@ -127,13 +143,20 @@ module.exports = function (grunt) {
 				dest: 'tmp/commons.js'
 			}
 		},
+		'aria-supported': {
+			data: {
+				entry: 'lib/commons/aria/index.js',
+				destFile: 'doc/aria-supported.md',
+				listType: 'unsupported' // Possible values for listType: 'supported', 'unsupported', 'all'
+			}
+		},
 		configure: {
 			rules: {
 				tmp: 'tmp/rules.js',
 				options: {
 					tags: grunt.option('tags')
 				},
-				files: langs.map(function (lang) {
+				files: langs.map(function(lang) {
 					return {
 						src: ['<%= concat.commons.dest %>'],
 						dest: {
@@ -146,23 +169,19 @@ module.exports = function (grunt) {
 		},
 		'add-locale': {
 			newLang: {
-				options: { lang: grunt.option('lang') },
+				options: {
+					lang: grunt.option('lang')
+				},
 				src: ['<%= concat.commons.dest %>'],
 				dest: './locales/' + (grunt.option('lang') || 'new-locale') + '.json'
 			}
 		},
-		langs : {
+		langs: {
 			generate: {
 				check: 'lib/commons/utils/valid-langs'
 			}
 		},
 		validate: {
-			tools: {
-				options: {
-					type: 'tool'
-				},
-				src: 'lib/tools/**/*.json'
-			},
 			check: {
 				options: {
 					type: 'check'
@@ -178,7 +197,7 @@ module.exports = function (grunt) {
 		},
 		uglify: {
 			beautify: {
-				files: langs.map(function (lang, i) {
+				files: langs.map(function(lang, i) {
 					return {
 						src: ['<%= concat.engine.files[' + i + '].dest %>'],
 						dest: '<%= concat.engine.files[' + i + '].dest %>'
@@ -190,37 +209,61 @@ module.exports = function (grunt) {
 					beautify: {
 						beautify: true,
 						indent_level: 2,
-						bracketize: true,
+						braces: true,
 						quote_style: 1
 					},
-					preserveComments: /^!/
+					output: {
+						comments: /^\/*! axe/
+					}
 				}
 			},
 			minify: {
-				files: langs.map(function (lang, i) {
+				files: langs.map(function(lang, i) {
 					return {
 						src: ['<%= concat.engine.files[' + i + '].dest %>'],
 						dest: './axe' + lang + '.min.js'
 					};
 				}),
 				options: {
-					preserveComments: function(node, comment) {
-						// preserve comments that start with a bang
-						return /^!/.test( comment.value );
+					output: {
+						comments: /^\/*! axe/
 					},
 					mangle: {
-						except: ['commons', 'utils', 'axe', 'window', 'document']
+						reserved: ['commons', 'utils', 'axe', 'window', 'document']
 					}
 				}
 			}
 		},
+		'file-exists': {
+			data: langs.reduce(function(out, lang) {
+				out.push('axe' + lang + '.js');
+				out.push('axe' + lang + '.min.js');
+				return out;
+			}, [])
+		},
 		watch: {
-			files: ['lib/**/*', 'test/**/*.js', 'Gruntfile.js'],
+			files: [
+				'lib/**/*',
+				'test/**/*.js',
+				'test/integration/**/!(index).{html,json}',
+				'Gruntfile.js'
+			],
 			tasks: ['build', 'testconfig', 'fixture']
 		},
 		testconfig: {
 			test: {
-				src: ['test/integration/rules/**/*.json'],
+				src: ['test/integration/rules/**/*.json'].concat(
+					process.env.APPVEYOR
+						? [
+								// These tests are causing PhantomJS to timeout on Appveyor
+								// Warning: PhantomJS timed out, possibly due to a missing Mocha run() call. Use --force to continue.
+								'!test/integration/rules/td-has-header/*.json',
+								'!test/integration/rules/label-content-name-mismatch/*.json',
+								'!test/integration/rules/label/*.json',
+								'!test/integration/rules/th-has-data-cells/*.json'
+						  ]
+						: []
+				),
 				dest: 'tmp/integration-tests.js'
 			}
 		},
@@ -232,7 +275,7 @@ module.exports = function (grunt) {
 					fixture: 'test/runner.tmpl',
 					testCwd: 'test/core',
 					data: {
-						title: 'aXe Core Tests'
+						title: 'Axe Core Tests'
 					}
 				}
 			},
@@ -247,7 +290,7 @@ module.exports = function (grunt) {
 					fixture: 'test/runner.tmpl',
 					testCwd: 'test/checks',
 					data: {
-						title: 'aXe Check Tests'
+						title: 'Axe Check Tests'
 					}
 				}
 			},
@@ -262,7 +305,7 @@ module.exports = function (grunt) {
 					fixture: 'test/runner.tmpl',
 					testCwd: 'test/commons',
 					data: {
-						title: 'aXe Commons Tests'
+						title: 'Axe Commons Tests'
 					}
 				}
 			},
@@ -277,7 +320,7 @@ module.exports = function (grunt) {
 					fixture: 'test/runner.tmpl',
 					testCwd: 'test/rule-matches',
 					data: {
-						title: 'aXe Rule Matches Tests'
+						title: 'Axe Rule Matches Tests'
 					}
 				}
 			},
@@ -289,7 +332,7 @@ module.exports = function (grunt) {
 					testCwd: 'test/integration/rules',
 					tests: ['../../../tmp/integration-tests.js', 'runner.js'],
 					data: {
-						title: 'aXe Integration Tests'
+						title: 'Axe Integration Tests'
 					}
 				}
 			}
@@ -297,20 +340,6 @@ module.exports = function (grunt) {
 		mocha: testConfig(grunt, {
 			reporter: grunt.option('reporter') || 'Spec'
 		}),
-		'test-webdriver': (function () {
-			var tests = testConfig(grunt);
-			var options = Object.assign({}, tests.unit.options);
-			options.urls = options.urls.concat(tests.integration.options.urls);
-			var driverTests = {};
-
-			['firefox', 'chrome', 'ie', 'safari', 'edge', 'chrome-mobile']
-			.forEach(function (browser) {
-				driverTests[browser] = {
-					options: Object.assign({ browser: browser }, options)
-				};
-			});
-			return driverTests;
-		}()),
 		connect: {
 			test: {
 				options: {
@@ -320,39 +349,67 @@ module.exports = function (grunt) {
 				}
 			}
 		},
-		jshint: {
-			axe: {
-				options: {
-					jshintrc: true,
-					reporter: grunt.option('report') ? 'checkstyle' : undefined,
-					reporterOutput: grunt.option('report') ? 'tmp/lint.xml' : undefined
-				},
-				src: [
-					'lib/**/*.js', 'test/**/*.js', 'build/tasks/**/*.js',
-					'doc/**/*.js', '!doc/examples/jest+react/*.js', 'Gruntfile.js'
-				]
+		run: {
+			npm_run_imports: {
+				cmd: 'node',
+				args: ['./build/imports-generator']
 			}
 		}
 	});
 
 	grunt.registerTask('default', ['build']);
 
-	grunt.registerTask('build', ['clean', 'jshint', 'validate', 'concat:commons', 'configure',
-		 'babel', 'concat:engine', 'uglify']);
+	grunt.registerTask('pre-build', ['clean', 'run:npm_run_imports']);
 
-	grunt.registerTask('test', ['build', 'retire', 'testconfig', 'fixture', 'connect',
-		'mocha', 'parallel', 'jshint']);
+	grunt.registerTask('build', [
+		'pre-build',
+		'validate',
+		'concat:commons',
+		'configure',
+		'babel',
+		'concat:engine',
+		'uglify',
+		'aria-supported'
+	]);
 
-	grunt.registerTask('ci-build', ['build', 'retire', 'testconfig', 'fixture', 'connect',
-	 'parallel', 'jshint']);
+	grunt.registerTask('test', [
+		'build',
+		'file-exists',
+		'testconfig',
+		'fixture',
+		'connect',
+		'mocha',
+		'parallel'
+	]);
 
-	grunt.registerTask('test-fast', ['build', 'testconfig', 'fixture', 'connect',
-		'mocha', 'jshint']);
+	grunt.registerTask('ci-build', [
+		'build',
+		'testconfig',
+		'fixture',
+		'connect',
+		'parallel'
+	]);
 
-	grunt.registerTask('translate', ['clean', 'jshint', 'validate', 'concat:commons', 'add-locale']);
+	grunt.registerTask('test-fast', [
+		'build',
+		'testconfig',
+		'fixture',
+		'connect',
+		'mocha'
+	]);
 
-	grunt.registerTask('dev', ['build', 'testconfig', 'fixture', 'connect', 'watch']);
+	grunt.registerTask('translate', [
+		'pre-build',
+		'validate',
+		'concat:commons',
+		'add-locale'
+	]);
 
-	grunt.registerTask('dev:no-lint', ['clean', 'validate', 'concat:commons', 'configure',
-		 'babel', 'concat:engine', 'uglify', 'testconfig', 'fixture', 'connect', 'watch']);
+	grunt.registerTask('dev', [
+		'build',
+		'testconfig',
+		'fixture',
+		'connect',
+		'watch'
+	]);
 };

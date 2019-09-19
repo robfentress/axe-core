@@ -1,28 +1,37 @@
-describe('has-visible-text', function () {
+describe('has-visible-text', function() {
 	'use strict';
 
 	var fixture = document.getElementById('fixture');
+	var checkSetup = axe.testUtils.checkSetup;
 
-	afterEach(function () {
+	var checkContext = axe.testUtils.MockCheckContext();
+
+	afterEach(function() {
 		fixture.innerHTML = '';
+		axe._tree = undefined;
+		checkContext.reset();
 	});
 
-	it('should return false if there is no visible text', function () {
-		fixture.innerHTML = '<object></object>';
-		var node = document.querySelector('object');
-		assert.isFalse(checks['has-visible-text'].evaluate(node));
+	it('should return false if there is no visible text', function() {
+		var params = checkSetup('<object id="target"></object>');
+		assert.isFalse(
+			checks['has-visible-text'].evaluate.apply(checkContext, params)
+		);
 	});
 
-	it('should return false if there is text, but its hidden', function () {
-		fixture.innerHTML = '<object><span style="display:none">hello!</span></object>';
-		var node = document.querySelector('object');
-		assert.isFalse(checks['has-visible-text'].evaluate(node));
+	it('should return false if there is text, but its hidden', function() {
+		var params = checkSetup(
+			'<object id="target"><span style="display:none">hello!</span></object>'
+		);
+		assert.isFalse(
+			checks['has-visible-text'].evaluate.apply(checkContext, params)
+		);
 	});
 
-	it('should return true if there is visible text', function () {
-		fixture.innerHTML = '<object>hello!</object>';
-		var node = document.querySelector('object');
-		assert.isTrue(checks['has-visible-text'].evaluate(node));
+	it('should return true if there is visible text', function() {
+		var params = checkSetup('<object id="target">hello!</object>');
+		assert.isTrue(
+			checks['has-visible-text'].evaluate.apply(checkContext, params)
+		);
 	});
-
 });

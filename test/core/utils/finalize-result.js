@@ -3,19 +3,19 @@ describe('axe.utils.finalizeRuleResult', function() {
 
 	var origAggregate;
 	beforeEach(function() {
-		origAggregate = axe.utils.aggregateRule;
+		origAggregate = axe.utils.aggregateNodeResults;
 	});
 
-	afterEach(function () {
-		axe.utils.aggregateRule = origAggregate;
+	afterEach(function() {
+		axe.utils.aggregateNodeResults = origAggregate;
 	});
 
 	it('should be a function', function() {
 		assert.isFunction(axe.utils.finalizeRuleResult);
 	});
 
-	it('returns the first param object', function () {
-		axe.utils.aggregateRule = function () {};
+	it('returns the first param object', function() {
+		axe.utils.aggregateNodeResults = function() {};
 
 		var goingIn = {};
 		var comingOut = axe.utils.finalizeRuleResult(goingIn);
@@ -23,10 +23,10 @@ describe('axe.utils.finalizeRuleResult', function() {
 		assert.equal(goingIn, comingOut);
 	});
 
-	it('passes the nodes property to utils.aggregateRule', function() {
+	it('passes the nodes property to utils.aggregateNodeResults', function() {
 		var isCalled = false;
 		var nodes = [];
-		axe.utils.aggregateRule = function (n) {
+		axe.utils.aggregateNodeResults = function(n) {
 			assert.equal(n, nodes);
 			isCalled = true;
 		};
@@ -34,14 +34,13 @@ describe('axe.utils.finalizeRuleResult', function() {
 		assert.ok(isCalled);
 	});
 
-	it('adds properties returned from utils.aggregateRule to the return value', function() {
-		axe.utils.aggregateRule = function () {
+	it('adds properties returned from utils.aggregateNodeResults to the return value', function() {
+		axe.utils.aggregateNodeResults = function() {
 			return {
-				vulgaris:'magistralis'
+				vulgaris: 'magistralis'
 			};
 		};
 		var out = axe.utils.finalizeRuleResult({});
 		assert.equal(out.vulgaris, 'magistralis');
 	});
-
 });

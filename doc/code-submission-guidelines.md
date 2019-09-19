@@ -13,7 +13,7 @@ will kindly ask you to resubmit it in the correct format.
 
 We follow Angular's code contribution style with precise rules for formatting git commit messages.
 This leads to more readable messages that are easy to follow when looking through the project
-history. We will also use commit messages to generate the aXe Changelog document.
+history. We will also use commit messages to generate the axe Changelog document.
 
 A detailed explanation of Angular's guidelines and conventions can be found [on Google Docs](https://docs.google.com/document/d/1QrDFcIiPjSLDn3EL15IJygNPiHORgU1_OOAqWjiDU5Y/edit#).
 
@@ -33,15 +33,15 @@ that includes a type, a scope and a subject. Here's a sample of the format:
 ### Here's an example:
 
 ```sh
-perf(color-contrast): improve speed of color contrast rules
+perf(rule): improve speed of color contrast rules
 
-	Use async process to compare elements without UI lockup
+  Use async process to compare elements without UI lockup
 
     Closes #1
 ```
 
 > Commit messages should be 100 characters or less to make them easy to read on Github and
-various git tools.
+> various git tools.
 
 ### How to structure your commits:
 
@@ -53,22 +53,22 @@ Must be one of the following:
 - **fix:** A bug fix
 - **docs:** Documentation only changes
 - **style:** Changes that do not affect the meaning of the code (white-space, formatting, missing
-semi-colons, etc)
+  semi-colons, etc)
 - **refactor:** A code change that neither fixes a bug nor adds a feature
 - **perf:** A code change that improves performance
 - **test:** Adding missing tests
 - **chore:** Changes to the build process or auxiliary tools and libraries such as documentation
-generation
+  generation
 
 #### Scope
 
 The scope specifies the place of the commit change in the codebase along with the type. It could
-reference a rule name, a commons file, or anything really. E.g. `perf(color-contrast)` or
-`test(p-as-heading)`.
+reference a rule, a commons file, or anything really. E.g. `feat(rule)` or
+`test(commons/aria)`. It would help us call to out rule changes in our changelog with `rule` used as the scope.
 
 If the scope is too broad to summarize, use the type only and leave off the parentheses. E.g.
-`type: some subject`
-
+`type: some subject`. Keep in mind that a long scope often pushes your commit message over 100 characters.
+Brevity is helpful for everyone!
 
 #### Subject
 
@@ -117,13 +117,14 @@ In the Github UI, you can use the new [Squash and Merge](https://github.com/blog
 To apply a pull request manually, make sure your local develop branch is up to date. Then, create a new branch for that pull request.
 
 Create a temporary, local branch:
+
 ```sh
 git checkout -b temp-feature-branch
 ```
 
 Run the following commands to apply all commits from that pull request on top of your branch's local history:
 
-```
+```console
 curl -L https://github.com/dequelabs/axe-core/pull/205.patch | git am -3
 ```
 
@@ -136,9 +137,9 @@ Before merging a pull request with many commits into develop, make sure there is
 changes in the pull request, so the git log stays lean. We particularly want to avoid merge messages and vague commits that don't follow our commit policy (like `Merged develop into featurebranch` or `fixed some stuff`).
 
 You can use git's interactive rebase to manipulate, merge, and rename commits in your local
-history. If these steps are followed, a force push shouldn't be necessary. 
+history. If these steps are followed, a force push shouldn't be necessary.
 
-**Do not force push to develop or master under any circulstances.**
+**Do not force push to develop or master under any circumstances.**
 
 To interactively rebase all of your commits on top of the latest in develop, run:
 
@@ -160,7 +161,8 @@ git pull --rebase origin develop
 ```
 
 You can then push the latest code to develop (note that force push isn't needed if these steps are followed):
-```
+
+```console
 git push origin develop
 ```
 
