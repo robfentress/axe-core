@@ -1,35 +1,49 @@
-<table id="pass1">
-	<tr>
-		<th>AXE</th>
-		<td>axe</td>
-	</tr>
-	<tr>
-		<th>AXE</th>
-		<td>axe</td>
-	</tr>
-</table>
+<!doctype html>
+<html lang="en">
 
-<table id="pass2" summary="">
-	<tr>
-		<th>AXE</th>
-		<td>axe</td>
-	</tr>
-	<tr>
-		<th>AXE</th>
-		<td>axe</td>
-	</tr>
-</table>
+<head>
+    <meta charset="utf-8" />
+    <title>table-duplicate-name test</title>
 
-<table id="fail1" summary="some table">
-	<caption>
-		some table
-	</caption>
-	<tr>
-		<th>AXE</th>
-		<td>axe</td>
-	</tr>
-	<tr>
-		<th>AXE</th>
-		<td>axe</td>
-	</tr>
-</table>
+</head>
+
+<body>
+    <table id="pass1">
+        <tr>
+            <th>AXE</th>
+            <td>axe</td>
+        </tr>
+        <tr>
+            <th>AXE</th>
+            <td>axe</td>
+        </tr>
+    </table>
+
+    <table id="pass2" summary="">
+        <tr>
+            <th>AXE</th>
+            <td>axe</td>
+        </tr>
+        <tr>
+            <th>AXE</th>
+            <td>axe</td>
+        </tr>
+    </table>
+
+    <table id="fail1" summary="some table">
+        <caption>
+            some table
+        </caption>
+        <tr>
+            <th>AXE</th>
+            <td>axe</td>
+        </tr>
+        <tr>
+            <th>AXE</th>
+            <td>axe</td>
+        </tr>
+    </table>
+
+</body>
+
+</html>
