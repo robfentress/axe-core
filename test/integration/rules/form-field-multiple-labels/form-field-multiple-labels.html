@@ -1,24 +1,33 @@
-<!-- Fail -->
-<label for="fail1">Hi</label>
-<label for="fail1">Foo</label>
-<input type="text" id="fail1" />
+<!doctype html>
+<html lang="en">
 
-<label for="fail2">label one</label>
-<label for="fail2">label two</label>
-<input type="checkbox" id="fail2" />
+<head>
+    <meta charset="utf-8" />
+    <title>form-field-multiple-labels label test</title>
 
-<label for="fail3" id="l1">label one</label>
-<label for="fail3">label two</label>
-<input type="checkbox" id="fail3" aria-labelledby="l1" />
+</head>
 
-<label for="fail4">First Name:</label>
-<label
-	>First Name:
+<body>
+    <!-- Fail -->
+    <label for="fail1">Hi</label>
+    <label for="fail1">Foo</label>
+    <input type="text" id="fail1" />
+
+    <label for="fail2">label one</label>
+    <label for="fail2">label two</label>
+    <input type="checkbox" id="fail2" />
+
+    <label for="fail3" id="l1">label one</label>
+    <label for="fail3">label two</label>
+    <input type="checkbox" id="fail3" aria-labelledby="l1" />
+
+    <label for="fail4">First Name:</label>
+    <label>First Name:
 	<input type="text" id="fail4" />
 </label>
 
-<label for="fail5">Choose an option:</label>
-<label>
+    <label for="fail5">Choose an option:</label>
+    <label>
 	Choose an option:
 	<select id="fail5">
 		<option selected="selected">Chosen</option>
@@ -26,21 +35,21 @@
 	</select>
 </label>
 
-<label for="fail6">Enter your comments:</label>
-<label>
+    <label for="fail6">Enter your comments:</label>
+    <label>
 	Enter your comments:
 	<textarea id="fail6"></textarea>
 </label>
 
-<label>
+    <label>
 	Enter your comments:
 	<label>
 		Enter your comments:
 		<textarea id="fail7"></textarea>
 	</label>
-</label>
+    </label>
 
-<label>
+    <label>
 	Enter your comments:
 	<label>
 		Enter your comments:
@@ -48,11 +57,11 @@
 			Enter your comments:
 			<textarea id="fail8"></textarea>
 		</label>
-	</label>
-</label>
+    </label>
+    </label>
 
-<label for="fail9">Enter your comments:</label>
-<label>
+    <label for="fail9">Enter your comments:</label>
+    <label>
 	Enter your comments:
 	<label>
 		Enter your comments:
@@ -60,21 +69,20 @@
 			Enter your comments:
 			<textarea id="fail9"></textarea>
 		</label>
-	</label>
-</label>
+    </label>
+    </label>
 
-<!-- Pass -->
-<label for="pass1">Label</label>
-<input type="text" id="pass1" />
+    <!-- Pass -->
+    <label for="pass1">Label</label>
+    <input type="text" id="pass1" />
 
-<textarea id="pass2" title="Label"></textarea>
+    <textarea id="pass2" title="Label"></textarea>
 
-<label
-	>First Name:
+    <label>First Name:
 	<input type="text" id="pass3" />
 </label>
 
-<label>
+    <label>
 	Choose an option:
 	<select id="pass4">
 		<option selected="selected">Chosen</option>
@@ -82,7 +90,11 @@
 	</select>
 </label>
 
-<label>
+    <label>
 	Enter your comments:
 	<textarea id="pass5"></textarea>
 </label>
+
+</body>
+
+</html>
