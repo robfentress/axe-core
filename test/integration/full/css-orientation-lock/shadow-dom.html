@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>shadow-dom css-orientation-lock test</title>
+    <meta charset="utf8" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+    <script>
+        window.onload = function() {
+
+            /**
+             * Provide an API for determining Shadow DOM v0 and v1 support in tests.
+             * PhantomJS doesn't have Shadow DOM support, while some browsers do.
+             *
+             * @param HTMLDocumentElement		The document of the current context
+             * @return Object
+             */
+            shadowSupport = (function(document) {
+                'use strict';
+                var v0 =
+                    document.body && typeof document.body.createShadowRoot === 'function',
+                    v1 = document.body && typeof document.body.attachShadow === 'function';
+
+                return {
+                    v0: v0 === true,
+                    v1: v1 === true,
+                    undefined: document.body &&
+                        typeof document.body.attachShadow === 'undefined' &&
+                        typeof document.body.createShadowRoot === 'undefined'
+                };
+            })(document);
+
+
+            var shadowSupported = shadowSupport.v1;
+
+            var fixture = document.getElementById('shadow-fixture');
+            var shadow = fixture.attachShadow({
+                mode: 'open'
+            });
+            shadow.innerHTML =
+                '<style> @media screen and (min-width: 10px) and (max-width: 2000px) and (orientation: portrait) { .shadowDiv { transform: rotate(90deg); } } .yellow { background-color: yellow; } </style>' +
+                '<div class="yellow">yellow</div>' +
+                '<div class="shadowDiv">red</div>';
+        }
+    </script>
+</head>
+
+<body>
+    <div id="shadow-fixture"></div>
+</body>
+
+</html>
